@@ -12,7 +12,7 @@ package org_src_DatadogRoutingJava;
 public class Location {
 	
 	private String name;
-	private String[] beers;
+	private String[] beers = new String[0];
 	private double lon;
 	private double lat;
 	
@@ -25,6 +25,9 @@ public class Location {
 		this.name = name;
 	}
 
+	public String getName() {
+		return name;
+	}
 	/**
 	 * Method for adding a beer.
 	 * @param beername
