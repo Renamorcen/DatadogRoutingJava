@@ -21,7 +21,6 @@ public class CSVReader {
 	 * @throws IOException
 	 */
 	public String[][] parseCSV(String filename) throws IOException {
-		System.out.println("Parsing file at " + filename);
 		/**
 		 * Using an arrayList, as the ability to append to a list is necessary because there is no way to
 		 * know the total size of the CSV file

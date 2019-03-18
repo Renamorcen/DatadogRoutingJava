@@ -5,6 +5,7 @@
 package org_src_DatadogRoutingJava;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -83,7 +84,6 @@ public class RoutingMain {
 				bestBeers=tupleThere.Beers;
 				bestTuple = tupleThere;
 			}
-		
 		}
 		return bestTuple;
 	}
@@ -115,7 +115,7 @@ public class RoutingMain {
 	 * @return
 	 */
 	public static int[] findPath(double lat, double lon, HashMap<Integer, Location> locations) {
-		double fuel = 2000.0;
+		double fuel = 1000.0;
 		Location[] optimalPath = new Location[0];
 		String[] beers = new String[0];
 		Location home = new Location(-1, lat, lon);
@@ -123,6 +123,7 @@ public class RoutingMain {
 		HashMap<Integer, Location> neighbourhood = getNeighbourhood(home, locations);
 		Tuple pathArrayListTuple = recursiveSoln(home, home, neighbourhood, new ArrayList<Integer>(), 0, fuel);
 		ArrayList<Integer> pathArrayList = pathArrayListTuple.Path;
+		pathArrayList.add(-1);
 		int[] path = new int[pathArrayList.size()];
 		for(int i = 0; i < pathArrayList.size(); i++) {
 			path[i] = pathArrayList.get(i);
@@ -130,10 +131,39 @@ public class RoutingMain {
 		return path;
 	}
 
+	/**
+	 * The method to print out the results as seen in the slides
+	 * @param path
+	 * @param globe
+	 */
+	public static void printResults(int[] path, HashMap<Integer, Location> globe) {
+		Location home = globe.get(-1);
+		System.out.println("Found " + (path.length-2) + " breweries:");
+		System.out.println();
+		ArrayList<String> beers = new ArrayList<String>();
+		double totalDist = 0;
+		System.out.println("->" + home.getName() + ": " + home.getLat() + ", " + home.getLon() + " distance 0km");
+		for(int i = 1; i < path.length-1; i++) {
+			Location brewery = globe.get(path[i]);
+			double distThere = brewery.calcDist(globe.get(path[i-1]));
+			totalDist += distThere;
+			beers.addAll(Arrays.asList(brewery.getBeers()));
+			System.out.println("->" + brewery.getName() + ": " + brewery.getLat() + ", " + brewery.getLon() + " distance "+ distThere + "km");
+		}
+		double distThere = home.calcDist(globe.get(path[path.length-2]));
+		System.out.println("<-" + home.getName() + ": " + home.getLat() + ", " + home.getLon() + " distance "+ distThere + "km");
+		totalDist += distThere;
+		System.out.println("Total Distance Travelled: " + totalDist + "km");
+		System.out.print("\n");
+		System.out.println("Collected " + beers.size() + " beer types:");
+		Iterator iterator = beers.iterator();
+		while(iterator.hasNext()) {
+			String beer = (String)iterator.next();
+			System.out.println(beer);
+		}
+	}
 	
 	public static void main(String[] args) {
-		System.out.println("Hello World");
-		
 		CSVReader reader = new CSVReader();
 		String[][] beers = null;
 		String[][] geocodes = null;
@@ -194,9 +224,9 @@ public class RoutingMain {
 		double lon = 19.43295600;
 		double lat = 51.74250300;
 		int[] path = findPath(lat, lon, locations);
-		for(int i = 0; i < path.length; i++) {
-			System.out.print(path[i] + " ");
-		}
-		System.out.println("Terminating!");
+		Location home = new Location(-1, lat, lon);
+		home.setName("Home");
+		locations.put(home.getID(), home);
+		printResults(path, locations);
 	}
 }

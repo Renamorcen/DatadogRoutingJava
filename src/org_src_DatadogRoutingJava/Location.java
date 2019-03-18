@@ -47,6 +47,9 @@ public class Location {
 	public int getBeerCount() {
 		return this.beers.length;
 	}
+	public String[] getBeers() {
+		return this.beers;
+	}
 	/**
 	 * Method for adding a beer.
 	 * @param beername
