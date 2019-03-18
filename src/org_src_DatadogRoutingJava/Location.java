@@ -29,6 +29,9 @@ public class Location {
 		this.ID = ID;
 	}
 
+	/**
+	 * Elementary mutators and accessors for the necessary fields
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}

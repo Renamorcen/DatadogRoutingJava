@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 /**
  * 
- * A seperate class for reading the contents of the .csv files with the necessary imports and exceptions.
+ * A seperate class for reading the contents of the .csv files with the necessary imports and exceptions. The built in methods did not fit my purpose.
  * @author Vytenis Sliogeris
  *
  */

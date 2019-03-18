@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Scanner;
 import java.util.Set;
 /**
  * 
@@ -54,7 +53,13 @@ public class RoutingMain {
 	}
 	/**
 	 * The recursive solution, same as in the Golang code.
-	 * Seems to not want to terminate.
+	 * Basically a brute-force method to find the best path.
+	 * Operates on exponential time.
+	 * Find the mathematically best path.
+	 * 
+	 * In the beginning the algorithm just checks if the current location is not a dead end. This is the base case for the recursion, and hence it
+	 * returns the path.
+	 * Else it applies itself on all of the neighbours, getting their paths. Then it keeps the best path.
 	 * @param currentPos
 	 * @param home
 	 * @param locations
@@ -73,8 +78,8 @@ public class RoutingMain {
 		ArrayList<Integer> pathSoFar = deepCopyArrayList(path);
 		pathSoFar.add(currentPos.getID());
 		int beersHere = beers + currentPos.getBeerCount();
-		Set IDset = neighbourhoodFromHere.keySet();
-		Iterator IDIterator = IDset.iterator();
+		Set<Integer> IDset = neighbourhoodFromHere.keySet();
+		Iterator<Integer> IDIterator = IDset.iterator();
 		while(IDIterator.hasNext()) {
 			Integer IDConsidered = (Integer)IDIterator.next();
 			Location locationConsidered = neighbourhoodFromHere.get(IDConsidered);
@@ -89,18 +94,19 @@ public class RoutingMain {
 	}
 	
 	/**
-	 * A method to lower the number of breweries to just the 1000km radius, to lower the input.
+	 * A method to lower the number of breweries to just the half of the fuel, to lower the input.
 	 * @param home
 	 * @param globe
+	 * @param distance
 	 * @return
 	 */
-	public static HashMap<Integer, Location> getNeighbourhood(Location home, HashMap<Integer, Location> globe){
+	public static HashMap<Integer, Location> getNeighbourhood(Location home, HashMap<Integer, Location> globe, double distance){
 		HashMap<Integer, Location> output = new HashMap<Integer, Location>();
 		Set<Integer> IDs = globe.keySet();
 		Iterator<Integer> IDterator = IDs.iterator();
 		while(IDterator.hasNext()) {
 			Integer ID = IDterator.next();
-			if(home.calcDist(globe.get(ID))<1000) {
+			if(home.calcDist(globe.get(ID))<distance) {
 				output.put(ID, globe.get(ID));
 			}
 		}
@@ -112,15 +118,14 @@ public class RoutingMain {
 	 * @param lat
 	 * @param lon
 	 * @param locations
+	 * @param fuelIn
 	 * @return
 	 */
-	public static int[] findPath(double lat, double lon, HashMap<Integer, Location> locations) {
-		double fuel = 1000.0;
-		Location[] optimalPath = new Location[0];
-		String[] beers = new String[0];
+	public static int[] findPath(double lat, double lon, HashMap<Integer, Location> locations, double fuelIn) {
+		double fuel = fuelIn;
 		Location home = new Location(-1, lat, lon);
 		home.setName("Home");
-		HashMap<Integer, Location> neighbourhood = getNeighbourhood(home, locations);
+		HashMap<Integer, Location> neighbourhood = getNeighbourhood(home, locations, fuelIn/2);
 		Tuple pathArrayListTuple = recursiveSoln(home, home, neighbourhood, new ArrayList<Integer>(), 0, fuel);
 		ArrayList<Integer> pathArrayList = pathArrayListTuple.Path;
 		pathArrayList.add(-1);
@@ -132,7 +137,8 @@ public class RoutingMain {
 	}
 
 	/**
-	 * The method to print out the results as seen in the slides
+	 * The method to print out the results as seen in the slides.
+	 * Nothing pretty as it's just printing
 	 * @param path
 	 * @param globe
 	 */
@@ -156,7 +162,7 @@ public class RoutingMain {
 		System.out.println("Total Distance Travelled: " + totalDist + "km");
 		System.out.print("\n");
 		System.out.println("Collected " + beers.size() + " beer types:");
-		Iterator iterator = beers.iterator();
+		Iterator<String> iterator = beers.iterator();
 		while(iterator.hasNext()) {
 			String beer = (String)iterator.next();
 			System.out.println(beer);
@@ -212,6 +218,10 @@ public class RoutingMain {
 		
 		/**
 		 * You can replace with any other method of inputting coordinates
+		 * I've also put in the fuel as a parameter to test whether or not the function works. Because we are basically trying to solve the travelling
+		 * salesman problem, the time grows exponentially as input increases.
+		 * 
+		 * Here I have left it at 1275, as it is doable in reasonable time (under a minute) and also outperforms the algorithm in the slides.
 		 */
 		/*
 		System.out.println("Please post your Latitude and Longitude in the for of Lat/Lon");
@@ -223,7 +233,7 @@ public class RoutingMain {
 		*/
 		double lon = 19.43295600;
 		double lat = 51.74250300;
-		int[] path = findPath(lat, lon, locations);
+		int[] path = findPath(lat, lon, locations, 1275.0);
 		Location home = new Location(-1, lat, lon);
 		home.setName("Home");
 		locations.put(home.getID(), home);
