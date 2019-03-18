@@ -15,18 +15,37 @@ public class Location {
 	private String[] beers = new String[0];
 	private double lon;
 	private double lat;
+	private int ID;
 	
+
 	/**
-	 * Constructor for the breweries file.
-	 * @param id
-	 * @param name
+	 * Constructor, as all breweries must have a location (for our purposes)
+	 * @param lat
+	 * @param lon
 	 */
-	public Location(String name) {
-		this.name = name;
+	public Location(int ID, double lat, double lon) {
+		this.lat = lat;
+		this.lon = lon;
+		this.ID = ID;
 	}
 
+	public void setName(String name) {
+		this.name = name;
+	}
 	public String getName() {
 		return name;
+	}
+	public double getLat() {
+		return this.lat;
+	}
+	public double getLon() {
+		return this.lon;
+	}
+	public int getID() {
+		return this.ID;
+	}
+	public int getBeerCount() {
+		return this.beers.length;
 	}
 	/**
 	 * Method for adding a beer.
@@ -40,14 +59,15 @@ public class Location {
 		beersNew[beersNew.length-1] = beerName;
 		beers = beersNew;
 	}
-	/**
-	 * Mutator for the geocodes file
-	 * @param lat
-	 * @param lon
-	 */
-	public void setLatLong(double lat, double lon) {
-		this.lat = lat;
-		this.lon = lon;
-	}
 	
+	/**
+	 * Helper method to get distance between locations
+	 * @param dest
+	 * @return
+	 */
+	public double calcDist(Location dest) {
+		double destLat = dest.getLat();
+		double destLon = dest.getLon();
+		return GeoManager.calcDist(lat, lon, destLat, destLon);
+	}
 }
