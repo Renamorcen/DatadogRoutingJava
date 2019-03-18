@@ -4,7 +4,11 @@
 
 package org_src_DatadogRoutingJava;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 /**
  * 
  * Main class for the program
@@ -14,10 +18,158 @@ import java.util.HashMap;
  */
 
 public class RoutingMain {
+	/**
+	 * A method to create a deep copy of a hash map, as there seems to not be the functionality built in.
+	 * Also added in the functionality to remove some entry while at it.
+	 * @param in
+	 * @param toRemove
+	 * @return
+	 */
+	public static HashMap<Integer, Location> deepCopyHashMap(HashMap<Integer, Location> in, Location toRemove){
+		HashMap<Integer, Location> out = new HashMap<Integer, Location>();
+		Set<Integer> IDs = in.keySet();
+		Iterator<Integer> IDterator = IDs.iterator();
+		while(IDterator.hasNext()) {
+			int ID = IDterator.next();
+			if(ID != toRemove.getID()) {
+				out.put(ID, in.get(ID));
+				}
+		}
+		return out;
+	}
+	/**
+	 * A deep copy method for the array list for the same reasons as stated before
+	 * @param in
+	 * @return
+	 */
+	public static ArrayList<Integer> deepCopyArrayList(ArrayList<Integer> in){
+		ArrayList<Integer> out = new ArrayList<Integer>();
+
+		for(int i = 0; i < in.size(); i++) {
+			out.add(in.get(i));
+		}
+		
+		return out;
+	}
+	/**
+	 * The recursive solution, same as in the Golang code.
+	 * Basically a brute-force method to find the best path.
+	 * Operates on exponential time.
+	 * Find the mathematically best path.
+	 * 
+	 * In the beginning the algorithm just checks if the current location is not a dead end. This is the base case for the recursion, and hence it
+	 * returns the path.
+	 * Else it applies itself on all of the neighbours, getting their paths. Then it keeps the best path.
+	 * @param currentPos
+	 * @param home
+	 * @param locations
+	 * @param path
+	 * @param beers
+	 * @param fuel
+	 * @return
+	 */
+	public static Tuple recursiveSoln(Location currentPos, Location home, HashMap<Integer, Location> locations, ArrayList<Integer> path, int beers, double fuel) {
+		if (fuel < home.calcDist(currentPos)) {
+			return new Tuple(beers, path);
+		}
+		int bestBeers = 0;
+		Tuple bestTuple = null;
+		HashMap<Integer, Location> neighbourhoodFromHere = deepCopyHashMap(locations, currentPos);
+		ArrayList<Integer> pathSoFar = deepCopyArrayList(path);
+		pathSoFar.add(currentPos.getID());
+		int beersHere = beers + currentPos.getBeerCount();
+		Set<Integer> IDset = neighbourhoodFromHere.keySet();
+		Iterator<Integer> IDIterator = IDset.iterator();
+		while(IDIterator.hasNext()) {
+			Integer IDConsidered = (Integer)IDIterator.next();
+			Location locationConsidered = neighbourhoodFromHere.get(IDConsidered);
+			double fuelLeftThere = fuel - currentPos.calcDist(locationConsidered);
+			Tuple tupleThere = recursiveSoln(locationConsidered, home, neighbourhoodFromHere, pathSoFar, beersHere, fuelLeftThere);
+			if(bestBeers < tupleThere.Beers) {
+				bestBeers=tupleThere.Beers;
+				bestTuple = tupleThere;
+			}
+		}
+		return bestTuple;
+	}
+	
+	/**
+	 * A method to lower the number of breweries to just the half of the fuel, to lower the input.
+	 * @param home
+	 * @param globe
+	 * @param distance
+	 * @return
+	 */
+	public static HashMap<Integer, Location> getNeighbourhood(Location home, HashMap<Integer, Location> globe, double distance){
+		HashMap<Integer, Location> output = new HashMap<Integer, Location>();
+		Set<Integer> IDs = globe.keySet();
+		Iterator<Integer> IDterator = IDs.iterator();
+		while(IDterator.hasNext()) {
+			Integer ID = IDterator.next();
+			if(home.calcDist(globe.get(ID))<distance) {
+				output.put(ID, globe.get(ID));
+			}
+		}
+		return output;
+	}
+	
+	/**
+	 * Wrapper class for the recursive method, setting the home node and starting the recursion
+	 * @param lat
+	 * @param lon
+	 * @param locations
+	 * @param fuelIn
+	 * @return
+	 */
+	public static int[] findPath(double lat, double lon, HashMap<Integer, Location> locations, double fuelIn) {
+		double fuel = fuelIn;
+		Location home = new Location(-1, lat, lon);
+		home.setName("Home");
+		HashMap<Integer, Location> neighbourhood = getNeighbourhood(home, locations, fuelIn/2);
+		Tuple pathArrayListTuple = recursiveSoln(home, home, neighbourhood, new ArrayList<Integer>(), 0, fuel);
+		ArrayList<Integer> pathArrayList = pathArrayListTuple.Path;
+		pathArrayList.add(-1);
+		int[] path = new int[pathArrayList.size()];
+		for(int i = 0; i < pathArrayList.size(); i++) {
+			path[i] = pathArrayList.get(i);
+		}
+		return path;
+	}
+
+	/**
+	 * The method to print out the results as seen in the slides.
+	 * Nothing pretty as it's just printing
+	 * @param path
+	 * @param globe
+	 */
+	public static void printResults(int[] path, HashMap<Integer, Location> globe) {
+		Location home = globe.get(-1);
+		System.out.println("Found " + (path.length-2) + " breweries:");
+		System.out.println();
+		ArrayList<String> beers = new ArrayList<String>();
+		double totalDist = 0;
+		System.out.println("->" + home.getName() + ": " + home.getLat() + ", " + home.getLon() + " distance 0km");
+		for(int i = 1; i < path.length-1; i++) {
+			Location brewery = globe.get(path[i]);
+			double distThere = brewery.calcDist(globe.get(path[i-1]));
+			totalDist += distThere;
+			beers.addAll(Arrays.asList(brewery.getBeers()));
+			System.out.println("->" + brewery.getName() + ": " + brewery.getLat() + ", " + brewery.getLon() + " distance "+ distThere + "km");
+		}
+		double distThere = home.calcDist(globe.get(path[path.length-2]));
+		System.out.println("<-" + home.getName() + ": " + home.getLat() + ", " + home.getLon() + " distance "+ distThere + "km");
+		totalDist += distThere;
+		System.out.println("Total Distance Travelled: " + totalDist + "km");
+		System.out.print("\n");
+		System.out.println("Collected " + beers.size() + " beer types:");
+		Iterator<String> iterator = beers.iterator();
+		while(iterator.hasNext()) {
+			String beer = (String)iterator.next();
+			System.out.println(beer);
+		}
+	}
 	
 	public static void main(String[] args) {
-		System.out.println("Hello World");
-		
 		CSVReader reader = new CSVReader();
 		String[][] beers = null;
 		String[][] geocodes = null;
@@ -36,23 +188,22 @@ public class RoutingMain {
 		 * Used a hashmap to avoid quadratic times for assigning latitudes and longitudes to the breweries
 		 * and to also avoid empty entries.
 		 */
-		//System.out.println(breweries.length);
 		HashMap<Integer, Location> locations = new HashMap<Integer, Location>();
-		for(int i = 0; i < breweries.length; i++) {
-			int id = Integer.parseInt(breweries[i][0]);
-			String name = breweries[i][1];
-			locations.put(id, new Location(name));
-		}
-		
 		/**
-		 * This function would perform in quadratic time if I used arbitrary ID's
+		 * This function would perform in quadratic time if I used arbitrary ID's. Checks if the brewery even exists at that location.
 		 */
 		for(int i = 0; i < geocodes.length; i++) {
 			int id = Integer.parseInt(geocodes[i][1]);
 			double lat = Double.parseDouble(geocodes[i][2]);
 			double lon = Double.parseDouble(geocodes[i][3]);
+			locations.put(id, new Location(id, lat, lon));
+		}
+		
+		for(int i = 0; i < breweries.length; i++) {
+			int id = Integer.parseInt(breweries[i][0]);
+			String name = breweries[i][1];
 			if(locations.get(id)!=null) {
-				locations.get(id).setLatLong(lat, lon);
+				locations.get(id).setName(name);
 			}
 		}
 		
@@ -64,8 +215,28 @@ public class RoutingMain {
 			}
 		}
 		
-		System.out.println("Please post your Latitude and Longitude in the for of Lat/Lon");
 		
-		System.out.println("Terminating!");
+		/**
+		 * You can replace with any other method of inputting coordinates
+		 * I've also put in the fuel as a parameter to test whether or not the function works. Because we are basically trying to solve the travelling
+		 * salesman problem, the time grows exponentially as input increases.
+		 * 
+		 * Here I have left it at 1275, as it is doable in reasonable time (under a minute) and also outperforms the algorithm in the slides.
+		 */
+		/*
+		System.out.println("Please post your Latitude and Longitude in the for of Lat/Lon");
+		Scanner scanner = new Scanner(System.in); 
+		String input = scanner.nextLine();
+		String[] coords = input.split("/");
+		double lat = Double.parseDouble(coords[0]);
+		double lon = Double.parseDouble(coords[1]);
+		*/
+		double lon = 19.43295600;
+		double lat = 51.74250300;
+		int[] path = findPath(lat, lon, locations, 1275.0);
+		Location home = new Location(-1, lat, lon);
+		home.setName("Home");
+		locations.put(home.getID(), home);
+		printResults(path, locations);
 	}
 }
