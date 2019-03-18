@@ -233,7 +233,7 @@ public class RoutingMain {
 		*/
 		double lon = 19.43295600;
 		double lat = 51.74250300;
-		int[] path = findPath(lat, lon, locations, 1275.0);
+		int[] path = findPath(lat, lon, locations, 1000.0);
 		Location home = new Location(-1, lat, lon);
 		home.setName("Home");
 		locations.put(home.getID(), home);
