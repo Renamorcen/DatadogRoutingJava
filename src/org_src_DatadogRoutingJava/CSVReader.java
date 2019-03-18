@@ -20,7 +20,7 @@ public class CSVReader {
 	 * @return
 	 * @throws IOException
 	 */
-	public String[][] parseCSV(String filename) throws IOException {
+	public static String[][] parseCSV(String filename) throws IOException {
 		/**
 		 * Using an arrayList, as the ability to append to a list is necessary because there is no way to
 		 * know the total size of the CSV file
@@ -51,7 +51,7 @@ public class CSVReader {
 	 * @return
 	 * @throws IOException 
 	 */
-	public String customRead(BufferedReader reader) throws IOException {
+	public static String customRead(BufferedReader reader) throws IOException {
 		String output = "";
 		boolean inCel = false;
 		int in = 0;
