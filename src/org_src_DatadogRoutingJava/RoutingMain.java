@@ -114,7 +114,7 @@ public class RoutingMain {
 	}
 	
 	/**
-	 * Wrapper class for the recursive method
+	 * Wrapper class for the recursive method, setting the home node and starting the recursion
 	 * @param lat
 	 * @param lon
 	 * @param locations
