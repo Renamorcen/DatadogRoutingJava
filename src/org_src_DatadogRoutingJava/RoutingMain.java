@@ -63,33 +63,29 @@ public class RoutingMain {
 	 * @return
 	 */
 	public static Tuple recursiveSoln(Location currentPos, Location home, HashMap<Integer, Location> locations, ArrayList<Integer> path, int beers, double fuel) {
-		ArrayList<Integer> outputPath = deepCopyArrayList(path);
-		ArrayList<Integer> bestPath = deepCopyArrayList(path);
-		int bestBeers = beers;
-		Tuple output = null;
-		if(currentPos.calcDist(home) > fuel || fuel < 0) {
+		if (fuel < home.calcDist(currentPos)) {
 			return new Tuple(beers, path);
-		}	
-		outputPath.add(currentPos.getID());
-		int currentBeers = beers + currentPos.getBeerCount();
-		
-		System.out.println(path.size() + " and pubs remaining " + locations.size() + " and beers " + beers + " and fuel " + fuel);
-		Set<Integer> IDs = locations.keySet();
-		Iterator<Integer> IDterator = IDs.iterator();
-		while(IDterator.hasNext()) {
-			int key = IDterator.next();
-			HashMap<Integer, Location> locationsThere = deepCopyHashMap(locations, currentPos);
-			Location considered = locations.get(key);
-			double fuelthere = fuel-currentPos.calcDist(considered);
-			Tuple alternativePath = recursiveSoln(considered, home, locationsThere, outputPath, currentBeers, fuelthere);
-			if(bestBeers < alternativePath.Beers) {
-				bestPath = alternativePath.Path;
-				bestBeers = alternativePath.Beers;
-			}
 		}
-		output = new Tuple(bestBeers, bestPath);
+		int bestBeers = 0;
+		Tuple bestTuple = null;
+		HashMap<Integer, Location> neighbourhoodFromHere = deepCopyHashMap(locations, currentPos);
+		ArrayList<Integer> pathSoFar = deepCopyArrayList(path);
+		pathSoFar.add(currentPos.getID());
+		int beersHere = beers + currentPos.getBeerCount();
+		Set IDset = neighbourhoodFromHere.keySet();
+		Iterator IDIterator = IDset.iterator();
+		while(IDIterator.hasNext()) {
+			Integer IDConsidered = (Integer)IDIterator.next();
+			Location locationConsidered = neighbourhoodFromHere.get(IDConsidered);
+			double fuelLeftThere = fuel - currentPos.calcDist(locationConsidered);
+			Tuple tupleThere = recursiveSoln(locationConsidered, home, neighbourhoodFromHere, pathSoFar, beersHere, fuelLeftThere);
+			if(bestBeers < tupleThere.Beers) {
+				bestBeers=tupleThere.Beers;
+				bestTuple = tupleThere;
+			}
 		
-		return output;
+		}
+		return bestTuple;
 	}
 	
 	/**
